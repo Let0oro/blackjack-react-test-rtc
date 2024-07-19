@@ -1,10 +1,13 @@
-import { useReducer, useMemo } from "react";
+import { useReducer, useMemo, useEffect, useCallback } from "react";
 import { Button, HStack, Box, Image, Text } from "@chakra-ui/react";
 import ModalExt from "../components/ModalExt";
 import useCurrentDate from "../hooks/useCurrentDate";
 import cardValue from "../utils/cardValue";
 import initialDeck from "../utils/initialDeck";
 import gameOver from "../utils/gameOver";
+import handleAddPlayer from "../utils/handleAddPlayer";
+import handleRemovePlayer from "../utils/handleRemovePlayer";
+import defer from "../utils/defer";
 
 const initialBlackJack = {
   deck: initialDeck(),
@@ -24,31 +27,16 @@ const reducer = (state, action) => {
     case "INIT_GAME":
       return { ...initialBlackJack, deck: initialDeck() };
     case "ASK_FOR_CARD":
-      if (!state.deck.length) {
-        alert("The deck is empty");
-        return state;
-      }
-      const newCardsPlayer = [...state.divsCardsPlayers].map((divCard, id) =>
-        id == state.turn ? [...divCard, [...state.deck].at(-1)] : divCard
-      );
       return {
         ...state,
         currentCardValue: cardValue([...state.deck].at(-1)),
         deck: state.deck.slice(0, -1),
-        divsCardsPlayers: newCardsPlayer,
+        divsCardsPlayers: action.newCardsPlayer,
       };
     case "SUM_OF_POINTS":
-      const newPoints = [...state.pointsPlayers].map((points, id) =>
-        id == state.turn
-          ? points +
-            (state.currentCardValue == 11 && points > 10
-              ? 1
-              : state.currentCardValue)
-          : points
-      );
       return {
         ...state,
-        pointsPlayers: newPoints,
+        pointsPlayers: action.newPoints,
       };
     case "NEXT_TURN":
       return {
@@ -56,111 +44,140 @@ const reducer = (state, action) => {
         turn: state.turn + 1,
       };
     case "BEST_POINTS_PLAYERS":
-      const newBestPoints = Math.max(
-        ...state.pointsPlayers.filter(
-          (v, i) => v <= 21 && i < state.numPlayers - 1
-        )
-      );
       return {
         ...state,
-        currentBestPoints: newBestPoints,
+        currentBestPoints: action.newBestPoints,
       };
     case "NEW_PLAYER":
-      if (state.numPlayers >= 5) {
-        alert("Impossible to add other player, max: 4");
-        return state;
-      }
       return {
         ...state,
-        numPlayers:
-          state.numPlayers < 5 ? state.numPlayers + 1 : state.numPlayers,
-        pointsPlayers:
-          state.pointsPlayers.length < 5
-            ? [...state.pointsPlayers, 0]
-            : state.pointsPlayers,
-        divsCardsPlayers:
-          state.divsCardsPlayers.length < 5
-            ? [...state.divsCardsPlayers, []]
-            : state.divsCardsPlayers,
+        numPlayers: state.numPlayers + 1,
+        pointsPlayers: [...state.pointsPlayers, 0],
+        divsCardsPlayers: [...state.divsCardsPlayers, []],
       };
     case "REMOVE_PLAYER":
-      if (state.numPlayers < 3) {
-        alert("Impossible to remove other player, min: 1");
-        return state;
-      }
-
       return {
         ...state,
-        numPlayers:
-          state.numPlayers > 2 ? state.numPlayers - 1 : state.numPlayers,
-        pointsPlayers:
-          state.pointsPlayers.length < 5
-            ? Array(state.numPlayers - 1).fill(0)
-            : state.pointsPlayers,
-        divsCardsPlayers:
-          state.divsCardsPlayers.length < 5
-            ? Array(state.numPlayers - 1).fill([])
-            : state.divsCardsPlayers,
+        numPlayers: state.numPlayers - 1,
+        pointsPlayers: Array(state.numPlayers - 1).fill(0),
+        divsCardsPlayers: Array(state.numPlayers - 1).fill([]),
       };
-    case "WHO_IS_THE_WINNER":
+    case "CLOSE_MODAL":
+      return { ...state, openModal: false };
+    case "OPEN_MODAL":
       return {
         ...state,
         openModal: true,
         titleModal: action.title,
         messageModal: action.message,
       };
-    case "CLOSE_MODAL":
-      return { ...state, openModal: false };
     default:
       throw new Error(`Type ${action.type} not recognised`);
   }
-};
-
-const defer = (funct, time = 100) => {
-  const idTimeOut = setTimeout(() => {
-    funct();
-    clearTimeout(idTimeOut);
-  }, time);
 };
 
 function BlackJack() {
   const date = useCurrentDate();
   const [state, dispatch] = useReducer(reducer, initialBlackJack);
 
+  const newPoints = useMemo(
+    () =>
+      [...state.pointsPlayers].map((points, id) =>
+        id == state.turn
+          ? points +
+            (state.currentCardValue == 11 && points > 10
+              ? 1
+              : state.currentCardValue)
+          : points
+      ),
+    [state.currentCardValue, state.deck.length]
+  );
+
+  useEffect(() => {
+    if (newPoints[state.turn] >= 21) {
+      dispatch({ type: "NEXT_TURN" });
+    }
+    dispatch({ type: "SUM_OF_POINTS", newPoints });
+  }, [state.currentCardValue, state.deck.length])
+
   const playersTurn = () => {
-    dispatch({ type: "ASK_FOR_CARD" });
-    dispatch({ type: "SUM_OF_POINTS" });
+    if (!state.deck.length) {
+      dispatch({
+        type: "OPEN_MODAL",
+        title: "Error getting a card",
+        message: "The deck is empty",
+      });
+    } else {
+      const newCardsPlayer = [...state.divsCardsPlayers].map((divCard, id) =>
+        id == state.turn ? [...divCard, [...state.deck].at(-1)] : divCard
+      );
+      dispatch({ type: "ASK_FOR_CARD", newCardsPlayer });
+    }
   };
 
-  useMemo(() => {
+
+
+  useEffect(() => {
     if (state.pointsPlayers[state.turn] >= 21) {
-      return dispatch({ type: "NEXT_TURN" });
+      dispatch({ type: "NEXT_TURN" });
     }
   }, [state.deck.length]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (state.turn >= state.numPlayers - 1) {
-      return dispatch({ type: "BEST_POINTS_PLAYERS" });
+      const newBestPoints = Math.max(
+        ...state.pointsPlayers.filter(
+          (v, i) => v <= 21 && i < state.numPlayers - 1
+        )
+      );
+      dispatch({ type: "BEST_POINTS_PLAYERS", newBestPoints });
     }
   }, [state.turn]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (state.turn >= state.numPlayers - 1) {
       if (
         state.currentBestPoints <= 21 &&
         state.pointsPlayers[state.numPlayers - 1] >= state.currentBestPoints
       ) {
-        const {title, message} = gameOver(state);
-        defer(() => dispatch({ type: "WHO_IS_THE_WINNER", title, message  }));
+        const { title, message } = gameOver(state);
+        defer(() => dispatch({ type: "OPEN_MODAL", title, message }));
       }
-      dispatch({ type: "ASK_FOR_CARD"});
-      dispatch({ type: "SUM_OF_POINTS" });
+      if (!state.deck.length) {
+        dispatch({
+          type: "OPEN_MODAL",
+          title: "Error getting a card",
+          message: "The deck is empty",
+        });
+      } else {
+        const newCardsPlayer = [...state.divsCardsPlayers].map((divCard, id) =>
+          id == state.turn ? [...divCard, [...state.deck].at(-1)] : divCard
+        );
+        dispatch({ type: "ASK_FOR_CARD", newCardsPlayer });
+        const newPoints = [...state.pointsPlayers].map((points, id) =>
+          id == state.turn
+            ? points +
+              (state.currentCardValue == 11 && points > 10
+                ? 1
+                : state.currentCardValue)
+            : points
+        );
+        dispatch({ type: "SUM_OF_POINTS", newPoints });
+      }
     }
   }, [state.currentBestPoints, state.pointsPlayers[state.numPlayers - 1]]);
 
   return (
     <Box as="section" bg="brand.1000" width="100lvw" height="100lvh" p="2rem">
-      <Text position="absolute" bottom=".5rem" right=".5rem" color="whiteAlpha.600">{date}</Text>
+      <Text
+        position="absolute"
+        bottom=".5rem"
+        right=".5rem"
+        color="whiteAlpha.600"
+        fontSize=".9rem"
+      >
+        {date}
+      </Text>
       <Box
         bg="tomato"
         color="white"
@@ -174,7 +191,8 @@ function BlackJack() {
 
       <ModalExt
         openModal={state.openModal}
-        message={state.message}
+        title={state.titleModal}
+        message={state.messageModal}
         closeModal={() => dispatch({ type: "CLOSE_MODAL" })}
       />
 
@@ -205,14 +223,13 @@ function BlackJack() {
         </Button>
         <Button
           display={!state.divsCardsPlayers[0].length ? "inline-block" : "none"}
-          onClick={() => defer(() => dispatch({ type: "REMOVE_PLAYER" }))}
-          disabled="disabled"
+          onClick={() => handleAddPlayer(state, dispatch)}
         >
           Eliminar Jugador
         </Button>
         <Button
           display={!state.divsCardsPlayers[0].length ? "inline-block" : "none"}
-          onClick={() => defer(() => dispatch({ type: "NEW_PLAYER" }))}
+          onClick={() => handleRemovePlayer(state, dispatch)}
         >
           Nuevo Jugador
         </Button>

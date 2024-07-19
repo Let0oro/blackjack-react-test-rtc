@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 
 const ModalExt = ({ openModal, title, message, closeModal }) => {
-  
+
   return (
     <Modal isOpen={openModal} onClose={closeModal}>
       <ModalOverlay />
