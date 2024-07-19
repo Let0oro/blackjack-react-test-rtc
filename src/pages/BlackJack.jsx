@@ -115,14 +115,6 @@ function BlackJack() {
     }
   };
 
-
-
-  useEffect(() => {
-    if (state.pointsPlayers[state.turn] >= 21) {
-      dispatch({ type: "NEXT_TURN" });
-    }
-  }, [state.deck.length]);
-
   useEffect(() => {
     if (state.turn >= state.numPlayers - 1) {
       const newBestPoints = Math.max(
