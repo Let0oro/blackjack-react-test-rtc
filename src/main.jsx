@@ -3,6 +3,9 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+import BlackJack from "./pages/BlackJack.jsx";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import ErrorPage from "./components/ErrorPage.jsx";
 
 const colors = {
   brand: {
@@ -15,11 +18,21 @@ const colors = {
 
 const theme = extendTheme({ colors })
 
+const router = createBrowserRouter([
+  {
+    path:"/",
+    element: <App/>,
+    errorElement: <ErrorPage />,
+    children: [
+      {path: "blackjack", element: <BlackJack />},
+    ]
+  }
+])
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ChakraProvider theme={theme} >
-      <App />
+      <RouterProvider router={router} />
     </ChakraProvider >
   </React.StrictMode>
 );
