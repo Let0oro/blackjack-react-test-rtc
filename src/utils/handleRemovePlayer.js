@@ -1,13 +1,13 @@
 export default (state, dispatch) => {
-  if (state.numPlayers >= 5) {
+  if (state.numPlayers < 3) {
     dispatch({
-      type: "MODAL_ERROR",
-      title: "Error getting a card",
-      message: "The deck is empty",
+      type: "OPEN_MODAL",
+      title: "Failed to remove other player",
+      message: "Impossible to remove other player, min: 1",
     });
     return;
   }
   dispatch({
-    type: "NEW_PLAYER",
+    type: "REMOVE_PLAYER",
   });
 };

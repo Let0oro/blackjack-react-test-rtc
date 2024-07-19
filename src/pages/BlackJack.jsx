@@ -215,13 +215,13 @@ function BlackJack() {
         </Button>
         <Button
           display={!state.divsCardsPlayers[0].length ? "inline-block" : "none"}
-          onClick={() => handleAddPlayer(state, dispatch)}
+          onClick={() => handleRemovePlayer(state, dispatch)}
         >
           Eliminar Jugador
         </Button>
         <Button
           display={!state.divsCardsPlayers[0].length ? "inline-block" : "none"}
-          onClick={() => handleRemovePlayer(state, dispatch)}
+          onClick={() => handleAddPlayer(state, dispatch)}
         >
           Nuevo Jugador
         </Button>

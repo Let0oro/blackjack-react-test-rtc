@@ -1,10 +1,10 @@
 export default (state, dispatch) => {
-    if (state.numPlayers < 3) {
+    if (state.numPlayers >= 5) {
         
       dispatch({
-        type: "MODAL_ERROR",
-        title: "Failed to remove other player",
-        message: "Impossible to remove other player, min: 1",
+        type: "OPEN_MODAL",
+        title: "Failed to add other player",
+        message: "Impossible to add  new player, max: 4",
       });
       return;
     }
