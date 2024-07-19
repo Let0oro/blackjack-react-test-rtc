@@ -7,29 +7,18 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  Button
+  Button,
 } from "@chakra-ui/react";
 
-const ModalExt = ({ openModal, message, closeModal }) => {
-
-  let bodyModal;
-
-  if (message && /(Sorry, you lost)|(Nobody wins)/gi.test(message)) {
-    bodyModal = "More luck the following time"
-  }
-  if (message && message.includes("win")) {
-    bodyModal = "Congratulations! Try the multiplayer local mode by adding new players"
-  }
-
+const ModalExt = ({ openModal, title, message, closeModal }) => {
+  
   return (
     <Modal isOpen={openModal} onClose={closeModal}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{message}</ModalHeader>
+        <ModalHeader>{title}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
-          {bodyModal}
-        </ModalBody>
+        <ModalBody>{message}</ModalBody>
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={closeModal}>
             Close

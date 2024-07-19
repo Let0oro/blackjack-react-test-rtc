@@ -1,24 +1,10 @@
 import { useReducer, useMemo } from "react";
-import _ from "lodash";
-import { Button, HStack, Box, Image, Text, VStack } from "@chakra-ui/react";
+import { Button, HStack, Box, Image, Text } from "@chakra-ui/react";
 import ModalExt from "../components/ModalExt";
 import useCurrentDate from "../hooks/useCurrentDate";
-
-const cardValue = (card) =>
-  isNaN(card.slice(0, -1))
-    ? card.slice(0, -1) === "A"
-      ? 11
-      : 10
-    : parseInt(card.slice(0, -1));
-
-const initialDeck = () =>
-  _.shuffle(
-    ["C", "D", "H", "S"]
-      .map((tipo) =>
-        "123456789AJQK".split("").map((v) => (Number(v) + 1 || v) + tipo)
-      )
-      .reduce((p, n) => p.concat(n), [])
-  );
+import cardValue from "../utils/cardValue";
+import initialDeck from "../utils/initialDeck";
+import gameOver from "../utils/gameOver";
 
 const initialBlackJack = {
   deck: initialDeck(),
@@ -30,6 +16,7 @@ const initialBlackJack = {
   currentBestPoints: 0,
   openModal: false,
   messageModal: "",
+  titleModal: "",
 };
 
 const reducer = (state, action) => {
@@ -116,22 +103,12 @@ const reducer = (state, action) => {
             : state.divsCardsPlayers,
       };
     case "WHO_IS_THE_WINNER":
-      const computerPoints = state.pointsPlayers[state.numPlayers - 1];
-      let newMessage = "";
-      if (state.currentBestPoints === computerPoints) {
-        newMessage = "Nobody wins";
-      } else if (
-        state.pointsPlayers.every((point) => point > 21) ||
-        (computerPoints <= 21 && state.currentBestPoints < computerPoints)
-      ) {
-        newMessage = "Sorry, you lost";
-      } else {
-        const playersWon = state.pointsPlayers.map(
-          (points, idx) => points == state.currentBestPoints ? idx + 1 : 0
-        ).filter(points => !!points);
-        newMessage = `P${playersWon.join(" & ")} win!`;
-      }
-      return { ...state, openModal: true, message: newMessage };
+      return {
+        ...state,
+        openModal: true,
+        titleModal: action.title,
+        messageModal: action.message,
+      };
     case "CLOSE_MODAL":
       return { ...state, openModal: false };
     default:
@@ -147,7 +124,7 @@ const defer = (funct, time = 100) => {
 };
 
 function BlackJack() {
-    const date = useCurrentDate();
+  const date = useCurrentDate();
   const [state, dispatch] = useReducer(reducer, initialBlackJack);
 
   const playersTurn = () => {
@@ -173,16 +150,17 @@ function BlackJack() {
         state.currentBestPoints <= 21 &&
         state.pointsPlayers[state.numPlayers - 1] >= state.currentBestPoints
       ) {
-        defer(() => dispatch({ type: "WHO_IS_THE_WINNER" }));
+        const {title, message} = gameOver(state);
+        defer(() => dispatch({ type: "WHO_IS_THE_WINNER", title, message  }));
       }
-      dispatch({ type: "ASK_FOR_CARD" });
+      dispatch({ type: "ASK_FOR_CARD"});
       dispatch({ type: "SUM_OF_POINTS" });
     }
   }, [state.currentBestPoints, state.pointsPlayers[state.numPlayers - 1]]);
 
   return (
     <Box as="section" bg="brand.1000" width="100lvw" height="100lvh" p="2rem">
-        <Text color="whiteAlpha.600">{date}</Text>
+      <Text position="absolute" bottom=".5rem" right=".5rem" color="whiteAlpha.600">{date}</Text>
       <Box
         bg="tomato"
         color="white"
@@ -251,7 +229,9 @@ function BlackJack() {
               <Text
                 color="transparent"
                 fontSize="x-large"
-                style={{ WebkitTextStroke: `1px ${idx == state.turn ? "#4FD1C5" : "black"}` }}
+                style={{
+                  WebkitTextStroke: `1px ${idx == state.turn ? "#4FD1C5" : "black"}`,
+                }}
                 mr="85px"
               >
                 {idx < state.numPlayers - 1 ? `J${idx + 1}` : "💻"} -{" "}

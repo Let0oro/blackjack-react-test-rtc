@@ -5,8 +5,9 @@ const useCurrentDate = () => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-        const time = new Date().toUTCString().split(' ').slice(0, -1).join(" ");
-        setTime(time);
+      const date = new Date().toLocaleDateString();
+      const time = new Date().toLocaleTimeString();        
+      setTime(`${date} [${time}]`);
     }, 1000);
     return () => {
         clearInterval(intervalId)
