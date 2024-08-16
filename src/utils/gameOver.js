@@ -19,7 +19,7 @@ export default (state) => {
       .filter((points) => !!points)
       .join(" & ");
     return {
-      title: `P${playersWon} win!`,
+      title: `J${playersWon} win!`,
       message:
         "Congratulations! Try the multiplayer local mode by adding new players",
     };

@@ -98,7 +98,7 @@ function BlackJack() {
       dispatch({ type: "NEXT_TURN" });
     }
     dispatch({ type: "SUM_OF_POINTS", newPoints });
-  }, [state.currentCardValue, state.deck.length])
+  }, [state.currentCardValue, state.deck.length]);
 
   const playersTurn = () => {
     if (!state.deck.length) {
@@ -160,7 +160,14 @@ function BlackJack() {
   }, [state.currentBestPoints, state.pointsPlayers[state.numPlayers - 1]]);
 
   return (
-    <Box as="section" bg="brand.1000" width="100lvw" height="100lvh" p="2rem">
+    <Box
+      as="section"
+      bg="brand.1000"
+      width="100%"
+      minHeight="100lvh"
+      height="100%"
+      p="2rem"
+    >
       <Text
         position="absolute"
         bottom=".5rem"
@@ -208,19 +215,22 @@ function BlackJack() {
         <Button
           bg="yellow.400"
           _hover={{ bgColor: "yellow.300", border: "1px solid yellow.600" }}
-          display={!!state.divsCardsPlayers[0].length ? "inline-block" : "none"}
+          isDisabled={!state.divsCardsPlayers[0].length}
+          _disabled={{ bgColor: "black", color: "brand.1000" }}
           onClick={() => defer(() => dispatch({ type: "NEXT_TURN" }))}
         >
           Detener
         </Button>
         <Button
-          display={!state.divsCardsPlayers[0].length ? "inline-block" : "none"}
+          isDisabled={state.divsCardsPlayers[0].length}
+          _disabled={{ bgColor: "black", color: "brand.1000" }}
           onClick={() => handleRemovePlayer(state, dispatch)}
         >
           Eliminar Jugador
         </Button>
         <Button
-          display={!state.divsCardsPlayers[0].length ? "inline-block" : "none"}
+          isDisabled={state.divsCardsPlayers[0].length}
+          _disabled={{ bgColor: "black", color: "brand.1000" }}
           onClick={() => handleAddPlayer(state, dispatch)}
         >
           Nuevo Jugador
