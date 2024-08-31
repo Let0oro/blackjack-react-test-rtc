@@ -1,4 +1,4 @@
-import { useReducer, useMemo, useEffect, useCallback } from "react";
+import { useReducer, useMemo, useEffect } from "react";
 import { Button, HStack, Box, Image, Text } from "@chakra-ui/react";
 import ModalExt from "../components/ModalExt";
 import useCurrentDate from "../hooks/useCurrentDate";
@@ -51,7 +51,6 @@ function BlackJack() {
 
   useEffect(() => {
     if (state.turn >= state.numPlayers - 1) {
-      console.log({ newBestPoints, pcPoints: state.pointsPlayers[state.numPlayers - 1], newPoints });
       if (newBestPoints <= 21 && state.pointsPlayers[state.numPlayers - 1] >= newBestPoints) {
         const { title, message } = gameOver(state);
         defer(() => dispatch({ type: "OPEN_MODAL", title, message }));
@@ -65,12 +64,11 @@ function BlackJack() {
         const newCardsPlayer = [...state.divsCardsPlayers].map((divCard, id) =>
           id == state.turn ? [...divCard, [...state.deck].at(-1)] : divCard
         );
-        console.log({ newCardsPlayer });
         dispatch({ type: "ASK_FOR_CARD", newCardsPlayer });
         dispatch({ type: "SUM_OF_POINTS", newPoints });
       }
     }
-  }, [state.pointsPlayers[state.numPlayers - 1], newBestPoints]);
+  }, [state.pointsPlayers[state.numPlayers - 1], newBestPoints, state.currentBestPoints]);
 
   return (
     <Box
