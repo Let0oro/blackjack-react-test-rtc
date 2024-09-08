@@ -1,5 +1,5 @@
 import { useReducer, useMemo, useEffect } from "react";
-import { Button, HStack, Box, Image, Text } from "@chakra-ui/react";
+import { Button, HStack, Box, Image, Text, VStack } from "@chakra-ui/react";
 import ModalExt from "../components/ModalExt";
 import useCurrentDate from "../hooks/useCurrentDate";
 import {
@@ -51,7 +51,10 @@ function BlackJack() {
 
   useEffect(() => {
     if (state.turn >= state.numPlayers - 1) {
-      if (newBestPoints <= 21 && state.pointsPlayers[state.numPlayers - 1] >= newBestPoints) {
+      if (
+        newBestPoints <= 21 &&
+        state.pointsPlayers[state.numPlayers - 1] >= newBestPoints
+      ) {
         const { title, message } = gameOver(state);
         defer(() => dispatch({ type: "OPEN_MODAL", title, message }));
       } else if (!state.deck.length) {
@@ -68,7 +71,11 @@ function BlackJack() {
         dispatch({ type: "SUM_OF_POINTS", newPoints });
       }
     }
-  }, [state.pointsPlayers[state.numPlayers - 1], newBestPoints, state.currentBestPoints]);
+  }, [
+    state.pointsPlayers[state.numPlayers - 1],
+    newBestPoints,
+    state.currentBestPoints,
+  ]);
 
   return (
     <Box
@@ -91,7 +98,7 @@ function BlackJack() {
       <Box
         bg="tomato"
         color="white"
-        p="20px"
+        p="10px"
         maxW="sm"
         mx="auto"
         borderRadius="8px"
@@ -106,82 +113,98 @@ function BlackJack() {
         closeModal={() => dispatch({ type: "CLOSE_MODAL" })}
       />
 
-      <HStack spacing="1rem" my="1rem" justifyContent="center">
+      <HStack spacing="1rem" my="1rem" justifyContent="center" wrap="wrap">
         <Button
           bg="red.600"
           color="red.50"
+          fontSize="smaller"
           _hover={{ bgColor: "red.500", border: "1px solid yellow.600" }}
           onClick={() => defer(() => dispatch({ type: "INIT_GAME" }))}
         >
-          Nuevo Juego
+          New Game
         </Button>
         <Button
           bg="blue.400"
+          fontSize="smaller"
           _hover={{ bgColor: "blue.300", border: "1px solid yellow.600" }}
           onClick={() => playersTurn(state, dispatch)}
           _disabled={{ bgColor: "black", color: "brand.1000" }}
-          isDisabled={state.turn >= state.numPlayers - 1 || state.pointsPlayers[state.numPlayers - 1]}
+          isDisabled={
+            state.turn >= state.numPlayers - 1 ||
+            state.pointsPlayers[state.numPlayers - 1]
+          }
         >
-          Pedir carta
+          Card
         </Button>
         <Button
           bg="yellow.400"
+          fontSize="smaller"
           _hover={{ bgColor: "yellow.300", border: "1px solid yellow.600" }}
-          isDisabled={!state.divsCardsPlayers[state.turn]?.length || state.pointsPlayers[state.numPlayers - 1]}
+          isDisabled={
+            !state.divsCardsPlayers[state.turn]?.length ||
+            state.pointsPlayers[state.numPlayers - 1]
+          }
           _disabled={{ bgColor: "black", color: "brand.1000" }}
           onClick={() => defer(() => dispatch({ type: "NEXT_TURN" }))}
         >
-          Detener
+          Stop
         </Button>
         <Button
+          fontSize="smaller"
           isDisabled={state.divsCardsPlayers[0].length}
           _disabled={{ bgColor: "black", color: "brand.1000" }}
           onClick={() => handleRemovePlayer(state, dispatch)}
         >
-          Eliminar Jugador
+          Del. player
         </Button>
         <Button
+          fontSize="smaller"
           isDisabled={state.divsCardsPlayers[0].length}
           _disabled={{ bgColor: "black", color: "brand.1000" }}
           onClick={() => handleAddPlayer(state, dispatch)}
         >
-          Nuevo Jugador
+          Add player
         </Button>
       </HStack>
 
-      <HStack wrap="wrap" justifyContent="space-around">
+      <HStack wrap="wrap" justifyContent="space-around" alignItems="top" gap="1rem">
         {Array.from({ length: state.numPlayers }, (_, idx) => (
           <Box key={idx}>
-            <HStack
-              minHeight="240px"
-              justifyContent="center"
+            <VStack
+              height="max-content"
+              alignItems="center"
               position="relative"
             >
               <Text
                 color="transparent"
-                fontSize="x-large"
+                fontSize="medium"
+                position="absolute"
+                width="max-content"
+                top="0"
+                left="0"
                 style={{
                   WebkitTextStroke: `1px ${idx == state.turn ? "#4FD1C5" : "black"}`,
                 }}
-                mr="85px"
               >
                 {idx < state.numPlayers - 1 ? `J${idx + 1}` : "💻"} -{" "}
                 <small>{state.pointsPlayers[idx]}</small>
               </Text>
+              <VStack pt="30px" mb="70px">
+
               {state.divsCardsPlayers[idx].map((carta, i) => (
                 <Image
-                  display="inline-block"
-                  key={i}
-                  ml="-85px"
-                  left="0"
-                  p="0"
-                  position="relative"
-                  width="150px"
-                  src={`../public/cartas/${carta}.png`}
-                  alt={carta}
+                display="inline-block"
+                key={i}
+                mb="-70px"
+                p="0"
+                position="relative"
+                height="100px"
+                src={`../public/cartas/${carta}.png`}
+                alt={carta}
                 />
               ))}
-            </HStack>
+              </VStack>
+            </VStack>
           </Box>
         ))}
       </HStack>
